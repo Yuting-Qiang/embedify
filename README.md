@@ -17,6 +17,13 @@ A flexible framework to generate vector representation of different data using d
   - Built-in visualization tools (t-SNE/UMAP projections)
   - GPU acceleration support
 
+## TODO
+### data
+- 实现基础CSV加载+归一化
+- 添加对Parquet/Excel格式的支持
+- 实现内存映射文件支持大型数据集
+- 集成自动特征工程（如自动编码分类列）
+
 ## Quick Start
 ### basic usage
 ```python
