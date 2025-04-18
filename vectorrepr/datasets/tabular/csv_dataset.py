@@ -1,6 +1,7 @@
 import pandas as pd
 import torch
 from ..base import BaseDataset, DataType
+from ...sampler import ConfigurableSampler, BaseSampler
 
 
 class CSVDataset(BaseDataset):
@@ -11,7 +12,8 @@ class CSVDataset(BaseDataset):
         delimiter: str = ",",
         na_values: str = "NA",
         na_handling: str = "drop",
-        transforms=None,
+        sampler: BaseSampler = None,
+        transforms: list = None,
     ):
         """
         Parameters
@@ -59,19 +61,37 @@ class CSVDataset(BaseDataset):
         # 转换为Tensor
         self.data = torch.tensor(self.df.values.astype("float32"))
 
+        # 初始化Sampler
+        self.sampler = sampler
+
     def __getitem__(self, idx):
-        sample = self.data[idx]
+        if self.sampler is None:
+            sample = self.data[idx]
 
-        # 应用预处理管道
-        for transform in self.preprocessing:
-            sample = transform(sample)
+            # 应用预处理管道
+            for transform in self.preprocessing:
+                sample = transform(sample)
 
-        if self.has_labels:
-            return sample, self.labels[idx]
-        return sample, None
+            if self.has_labels:
+                return sample, self.labels[idx]
+            return sample, None
+        else:
+            pair, score = self.sampler.sample(idx)
+            anchor_sample = self.data[pair[0]]
+            candidate_sample = self.data[pair[1]]
+
+            # 应用预处理管道
+            for transform in self.preprocessing:
+                anchor_sample = transform(anchor_sample)
+                candidate_sample = transform(candidate_sample)
+
+            return anchor_sample, candidate_sample, score
 
     def __len__(self):
-        return len(self.data)
+        if self.sampler is None:
+            return len(self.data)
+        else:
+            return len(self.sampler)
 
 
 class LazyCSVDataset(CSVDataset):
@@ -89,5 +109,14 @@ class LazyCSVDataset(CSVDataset):
 
 if __name__ == "__main__":
     dataset1 = CSVDataset("data/tmp/clean_dataset.csv", label_column="High_n1")
-    for i, (sample, target) in enumerate(dataset1):
-        print(i, sample, target)
+    print(len(dataset1))
+    # for i, (sample, target) in enumerate(dataset1):
+    #     print(i, sample, target)
+
+    sampler = ConfigurableSampler([0, 1, 2], [[1, 2], [0, 1, 2], [1]], [[1, 1], [0, 1, 1], [1]])
+    dataset = CSVDataset("data/tmp/clean_dataset.csv", label_column="High_n1", sampler=sampler)
+    for i, (anchor_sample, candidate_sample, score) in enumerate(dataset):
+        print(i)
+        print(anchor_sample)
+        print(candidate_sample)
+        print(score)

@@ -2,17 +2,17 @@ from torch.utils.data import Dataset
 from enum import Enum
 from abc import abstractmethod
 
+
 class DataType(Enum):
     TABULAR = "tabular"
-    IMAGE = "image" # TODO
-    TEXT = "text" # TODO
-    AUDIO = "audio" # TODO
-    VIDEO = "video" # TODO
+    IMAGE = "image"  # TODO
+    TEXT = "text"  # TODO
+    AUDIO = "audio"  # TODO
+    VIDEO = "video"  # TODO
+
 
 class BaseDataset(Dataset):
-    def __init__(self, 
-                data_type: DataType,
-                preprocessing_pipeline: list = None):
+    def __init__(self, data_type: DataType, preprocessing_pipeline: list = None):
         """
         Parameters
         ----------
@@ -27,7 +27,7 @@ class BaseDataset(Dataset):
 
     @abstractmethod
     def __getitem__(self, idx):
-        """return (sample, target) """
+        """return (sample, target)"""
         pass
 
     @abstractmethod

@@ -1,6 +1,12 @@
 import pytest
 from vectorrepr.datasets.tabular.csv_dataset import CSVDataset
+from vectorrepr.sampler.configurable_sampler import ConfigurableSampler
 import pandas as pd
+
+
+@pytest.fixture
+def mock_config_sampler():
+    return ConfigurableSampler([0, 1, 2], [[1, 2], [0, 1, 2], [1]], [[1, 1], [0, 1, 1], [1]])
 
 
 @pytest.fixture
@@ -28,5 +34,15 @@ def test_csv_dataset_loading(sample_csv):
     _, df = sample_csv
     dataset = CSVDataset(df, label_column="High_n1")
     assert len(dataset) == 119778, "Dataset should have 119778 samples"
-    assert dataset[0][0].shape == (50, ), "Sample should have 50 features"
+    assert dataset[0][0].shape == (50,), "Sample should have 50 features"
     assert dataset[0][1] is not None, "Target should not be None"
+
+
+def test_csv_dataset_with_sampler(sample_csv, mock_config_sampler):
+    _, df = sample_csv
+    dataset = CSVDataset(df, label_column="High_n1", sampler=mock_config_sampler)
+    assert len(dataset) == 6, "Dataset with sampler should have 6 samples"
+    assert dataset[0][0].shape == (50,), f"anchor sample should have 50 features, {dataset[0][0]}"
+    assert dataset[0][1].shape == (
+        50,
+    ), f"candidate sample should have 50 features, {dataset[0][0]}"
