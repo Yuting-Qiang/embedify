@@ -24,7 +24,7 @@ class ConfigurableSampler(BaseSampler):
             assert len(candidates[i]) == len(scores[i])
 
         self.sample_pairs = [[a, c] for a, x in zip(anchors, candidates) for c in x]
-        self.scores = np.concatenate(scores, axis=0)
+        self.scores = np.concatenate(scores, axis=0, dtype=np.float32)
         assert len(self.sample_pairs) == len(self.scores)
 
     def sample(self, idx):

@@ -9,6 +9,7 @@ import torch
 import h5py
 
 from vectorrepr.sampler import BaseSampler, ConfigurableSampler
+from vectorrepr.datasets.base import BaseDataset
 
 SUPPORTED_FORMATS = {
     ".csv": "pandas",
@@ -23,7 +24,7 @@ SUPPORTED_FORMATS = {
 }
 
 
-class TabularDataset:
+class TabularDataset(BaseDataset):
     def __init__(
         self,
         data_source: Union[str, pd.DataFrame, np.ndarray, dict],
@@ -167,7 +168,7 @@ class TabularDataset:
             col_means = np.nanmean(np.where(nan_mask, np.nan, self.data), axis=0)
             self.data = np.where(nan_mask, col_means, self.data)
         elif self.na_handling == "drop":
-            valid_rows = ~np.any(nan_mask, axis=1)
+            valid_rows = ~np.any(nan_mask, axis=tuple([i for i in range(1, len(self.data.shape))]))
             self.data = self.data[valid_rows]
             if self.labels is not None:
                 self.labels = self.labels[valid_rows]
