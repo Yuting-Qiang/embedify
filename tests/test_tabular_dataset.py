@@ -1,7 +1,9 @@
 import pytest
 from vectorrepr.datasets.tabular.csv_dataset import CSVDataset
+from vectorrepr.datasets.tabular.tabular_dataset import TabularDataset
 from vectorrepr.sampler.configurable_sampler import ConfigurableSampler
 import pandas as pd
+import numpy as np
 
 
 @pytest.fixture
@@ -46,3 +48,30 @@ def test_csv_dataset_with_sampler(sample_csv, mock_config_sampler):
     assert dataset[0][1].shape == (
         50,
     ), f"candidate sample should have 50 features, {dataset[0][0]}"
+
+
+def test_tabular_dataset():
+    data = np.random.rand(100, 5)
+    dataset = TabularDataset(
+        data_source=data,
+        label_column=0,
+        columns=["label", "feat1", "feat2", "feat3", "feat4"],
+        na_handling="mean",
+        na_values=[np.inf, np.nan],
+    )
+    assert len(dataset) == 100
+
+
+def test_tabular_dataset_with_sampler():
+    data = np.random.rand(100, 5)
+    sampler = ConfigurableSampler([0, 1, 2], [[1, 2], [0, 1, 2], [1]], [[1, 1], [0, 1, 1], [1]])
+    dataset = TabularDataset(
+        data_source=data,
+        columns=["label", "feat1", "feat2", "feat3", "feat4"],
+        na_handling="mean",
+        na_values=[np.inf, np.nan],
+        sampler=sampler,
+    )
+    assert len(dataset) == 6
+    assert dataset[0][0].shape == (5,), f"anchor sample should have 5 features, {dataset[0][0]}"
+    assert dataset[0][1].shape == (5,), f"candidate sample should have 5 features, {dataset[0][0]}"
