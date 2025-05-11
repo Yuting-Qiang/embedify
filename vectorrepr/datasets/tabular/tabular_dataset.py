@@ -8,7 +8,7 @@ import torch
 # import pyarrow.parquet as pq
 import h5py
 
-from vectorrepr.sampler import BaseSampler, ConfigurableSampler
+from vectorrepr.sampler import BaseSampler
 from vectorrepr.datasets.base import BaseDataset
 
 SUPPORTED_FORMATS = {
@@ -88,10 +88,14 @@ class TabularDataset(BaseDataset):
 
     def _load_pandas(self, path, label_col, columns, **kwargs):
         """加载pandas兼容格式"""
+
+        if label_col is not None:
+            columns.append(label_col)
+
         if path.endswith(".parquet"):
-            df = pd.read_parquet(path, **kwargs)
+            df = pd.read_parquet(path, columns=columns, **kwargs)
         else:  # csv, feather等
-            df = pd.read_csv(path, **kwargs)
+            df = pd.read_csv(path, columns=columns, **kwargs)
 
         return self._process_pandas(df, label_col)
 
@@ -159,10 +163,14 @@ class TabularDataset(BaseDataset):
         for transform in self.transforms:
             self.data = transform(self.data)
 
-    def _handle_missing_values(self):
+    def _handle_missing_values(self, pdna=True, npna=False):
         """跨格式缺失值处理"""
         # 识别NaN位置（兼容不同格式的缺失表示）
-        nan_mask = pd.isna(self.data) | np.isin(self.data, self.na_values)
+        nan_mask = np.zeros(self.data.shape, dtype=bool)
+        if pdna:
+            nan_mask |= pd.isna(self.data)
+        if npna:
+            nan_mask |= np.isin(self.data, self.na_values)
 
         if self.na_handling == "mean":
             col_means = np.nanmean(np.where(nan_mask, np.nan, self.data), axis=0)
@@ -205,24 +213,38 @@ class TabularDataset(BaseDataset):
 
 # 使用示例
 if __name__ == "__main__":
-    # 加载numpy数组
-    data = np.random.rand(100, 5)
-    dataset = TabularDataset(
-        data_source=data,
-        columns=["label", "feat1", "feat2", "feat3", "feat4"],
-        na_handling="mean",
-        na_values=[np.inf, np.nan],
-    )
-    print(len(dataset))
+    ## 加载numpy数组
+    # data = np.random.rand(100, 5)
+    # dataset = TabularDataset(
+    #     data_source=data,
+    #     columns=["label", "feat1", "feat2", "feat3", "feat4"],
+    #     na_handling="mean",
+    #     na_values=[np.inf, np.nan],
+    # )
+    # print(len(dataset))
 
-    sampler = ConfigurableSampler([0, 1, 2], [[1, 2], [0, 1, 2], [1]], [[1, 1], [0, 1, 1], [1]])
+    # sampler = ConfigurableSampler([0, 1, 2], [[1, 2], [0, 1, 2], [1]], [[1, 1], [0, 1, 1], [1]])
+    # dataset = TabularDataset(
+    #     data, columns=["label", "feat1", "feat2", "feat3", "feat4"], sampler=sampler
+    # )
+    # print(len(dataset))
+    # print(dataset[0][0].shape)
+
+    ## 从parquet中读取
     dataset = TabularDataset(
-        data, columns=["label", "feat1", "feat2", "feat3", "feat4"], sampler=sampler
+        data_source="data/processed/stock500_2023_2024.parquet",
+        columns=[
+            "feature_p0",
+            "feature_p1",
+            "feature_p2",
+            "feature_p3",
+            "feature_p4",
+            "feature_p5",
+            "feature_p6",
+            "feature_p7",
+            "feature_p8",
+            "feature_p9",
+            "feature_p10",
+        ],
+        label_column="label1",
     )
-    print(len(dataset))
-    print(dataset[0][0].shape)
-    # for i, (anchor_sample, candidate_sample, score) in enumerate(dataset):
-    #     print(i)
-    #     print(anchor_sample)
-    #     print(candidate_sample)
-    #     print(score)
