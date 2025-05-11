@@ -1,6 +1,7 @@
-# VectorRepr
+# Embedify
 
 A flexible framework to generate vector representation of different data using deep learning models. Designed for both research and production use cases. 
+** still work in progress **
 
 ## Features
 - 🕒 **Multiple Model Architectures**
@@ -27,42 +28,46 @@ A flexible framework to generate vector representation of different data using d
 ## Quick Start
 ### basic usage
 ```python
-from tsembed import TemporalEmbedder
 
-# 初始化模型
-embedder = TemporalEmbedder(model="transformer", input_dims=3)
+from torch.utils.data import DataLoader
+from vectorrepr.datasets.timeseries import TimeSeriesDataset
+from vectorrepr.sampler import ConfigurableSampler
+from vectorrepr.models import TimeSeriesTransformerEmbedding
+from vectorrepr.trainer.contrastive.pairwise_train import train
 
-# 自监督训练
-embedder.fit(your_data)
+# create dataloader with sampler
 
-# 生成Embedding
-embeddings = embedder.transform(your_data)
+dataset = TimeSeriesDataset(
+    "Your_dataframe",
+    time_idx="DateIdx",
+    group_ids="group",
+    feature_columns=["col1", "col2"],
+    na_handling=-1,
+    input_steps=30,
+    predict_steps=5,
+)
+sampler = ConfigurableSampler(
+    dataset, 
+    anchors = [0, 1, 2], 
+    candidates = [[1, 2], [0, 1, 2], [1]], 
+    scores = [[1.0, 1.0], [0.0, 1.0, 1.0], [1.0]]
+)
+
+train_loader = DataLoader(dataset, batch_size=128, shuffle=True)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = TimeSeriesTransformerEmbedding(6, 512, 8, 6).to(device)
+
+train(train_loader, model, criterion, epochs=10, learning_rate=0.0001)
 ```
 ### visualization
-```python
-from tsembed.visualization import plot_embeddings
-```
+WIP
 
 ## Documentation
-Full documentation is available at https://yourusername.github.io/tsembed (when deployed) or:
-```bash
-python -m pydoc tsembed.TemporalEmbedder
-```
+WIP
 
 ## Citation
-Citation
-If you use TSEmbed in your research, please cite:
-
-```bibtex
-@software{TSEmbed,
-  author = {Your Name},
-  title = {TSEmbed: A Flexible Time Series Embedding Library},
-  year = {2023},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/yourusername/tsembed}}
-}
-```
+WIP
 
 ## Project Organization
 
