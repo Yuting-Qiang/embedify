@@ -38,7 +38,10 @@ loader = DataLoader(sampler, batch_size=1024, shuffle=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = TimeSeriesCNN(6, 30, 256).to(device, dtype=torch.float32)
+model = TimeSeriesTransformerEmbedding(6, 256, 4, 2).to(device, dtype=torch.float32)
+
+# model = TimeSeriesCNN(6, 30, 256).to(device, dtype=torch.float32)
+# model = LSTMEncoder(6, 256).to(device, dtype=torch.float32)
 criterion = nn.MSELoss(reduction="none")
 optimizer = optim.Adam(model.parameters(), lr=0.00001)
 train(loader, model, criterion, epochs=10, learning_rate=0.00001)

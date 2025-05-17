@@ -16,7 +16,7 @@ class TimeSeriesTransformerEmbedding(nn.Module):
     def forward(self, x):
         # x的形状为(batch_size, sequence_length, input_size)
         x = self.embedding(x)
-        x = self.positional_encoding(x.permute(1, 0, 2)).permute(1, 0, 2)
+        # x = self.positional_encoding(x.permute(1, 0, 2)).permute(1, 0, 2)
         output = self.transformer_encoder(x)
         return output
 
