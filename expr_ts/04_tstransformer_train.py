@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from vectorrepr.datasets.timeseries import TimeSeriesDataset
 from vectorrepr.sampler import ConfigurableSampler
-from vectorrepr.models import TimeSeriesTransformerEmbedding
+from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder
 from vectorrepr.trainer.contrastive.pairwise_train import train
 
 dataset = TimeSeriesDataset(
@@ -28,12 +28,12 @@ sampled_candidates = pkl.load(
 anchors = [x[0] for x in sampled_candidates]
 candidates = [x[1] for x in sampled_candidates]
 scores = [x[2] for x in sampled_candidates]
-sampler = ConfigurableSampler(dataset, anchors[:100], candidates[:100], scores[:100])
+sampler = ConfigurableSampler(dataset, anchors[:10000], candidates[:10000], scores[:10000])
 
-loader = DataLoader(sampler, batch_size=100, shuffle=True)
+loader = DataLoader(sampler, batch_size=512, shuffle=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = TimeSeriesTransformerEmbedding(6, 512, 8, 6).to(device)
+model = LSTMEncoder(6, 512).to(device, dtype=torch.float32)
 criterion = nn.MSELoss(reduction="none")
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
-train(loader, model, criterion, epochs=10, learning_rate=0.0001)
+optimizer = optim.Adam(model.parameters(), lr=0.00001)
+train(loader, model, criterion, epochs=10, learning_rate=0.00001)
