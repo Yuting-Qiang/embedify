@@ -1,6 +1,7 @@
 import numpy as np
 from ..datasets.base import BaseDataset
 from .base_sampler import BaseSampler
+import torch
 
 
 class ConfigurableSampler(BaseSampler):
@@ -54,7 +55,7 @@ class ConfigurableSampler(BaseSampler):
         if len(candidate_sample) > 1:
             candidate_sample = candidate_sample[0]
 
-        return anchor_sample, candidate_sample, score.astype(np.float32)
+        return anchor_sample, candidate_sample, score
 
 
 if __name__ == "__main__":

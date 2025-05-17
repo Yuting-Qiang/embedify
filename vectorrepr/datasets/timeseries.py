@@ -187,7 +187,7 @@ class TimeSeriesDataset(BaseDataset):
         input = (
             self.data[self.feature_columns]
             .iloc[start_row_idx : start_row_idx + self.input_steps]
-            .values.astype(np.float32)
+            .values
         )
         output = (
             self.data[self.feature_columns]
@@ -197,7 +197,7 @@ class TimeSeriesDataset(BaseDataset):
                 + self.input_steps
                 + self.predict_steps
             ]
-            .values.astype(np.float32)
+            .values
         )
         if self.return_group_time:
             return (

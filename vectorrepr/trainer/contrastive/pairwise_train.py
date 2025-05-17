@@ -6,6 +6,8 @@ import numpy as np
 from loguru import logger
 from tqdm import tqdm
 from pathlib import Path
+from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder
+import time
 
 
 def configure_device(use_cuda: bool = True) -> torch.device:
@@ -32,25 +34,38 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
     # 训练循环
     with tqdm(train_loader, desc="Training", unit="batch") as progress:
         for anchor, candidate, score in progress:
-            anchor, candidate, score = (anchor.to(device), candidate.to(device), score.to(device))
-
+            # start = time.time()
+            # 数据改成torch.float32
+            anchor, candidate, score = (
+                anchor.to(device, dtype=torch.float32),
+                candidate.to(device, dtype=torch.float32),
+                score.to(device, dtype=torch.float32),
+            )
+            # print("time cost for load data:", time.time() - start)
+            # start = time.time()
+            # 数据改成torch.float32
             optimizer.zero_grad()
 
             anchor_embedding = model(anchor)
-            anchor_embedding = torch.mean(anchor_embedding, dim=1)
 
             candidate_embedding = model(candidate)
-            candidate_embedding = torch.mean(candidate_embedding, dim=1)
+            if isinstance(model, TimeSeriesTransformerEmbedding):
+                anchor_embedding = torch.mean(anchor_embedding, dim=1)
+                candidate_embedding = torch.mean(candidate_embedding, dim=1)
+            elif isinstance(model, LSTMEncoder):
+                anchor_embedding = torch.mean(anchor_embedding, dim=0)
+                candidate_embedding = torch.mean(candidate_embedding, dim=0)
 
             similarities = cosine_similarity(anchor_embedding, candidate_embedding)
 
             each_loss = criterion(similarities, score)
-
             # loss = (each_loss.mean(dim=1)*(1-anchor_y[:, 0])*positive_ratio).sum() + (each_loss.mean(dim=1)*anchor_y[:, 0]*negative_ratio).sum()
             loss = each_loss.mean()
+            # print("time cost for forward:", time.time() - start)
+            # start = time.time()
             loss.backward()
             optimizer.step()
-
+            # print("time cost for backward:", time.time() - start)
             running_loss += loss.item()
             progress.set_postfix(loss=loss.item())
             # print(loss.item())
@@ -116,5 +131,5 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TimeSeriesTransformerEmbedding(7, 512, 8, 6).to(device)
     criterion = nn.MSELoss(reduction="none")
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
-    train(train_loader, model, criterion, epochs=10, learning_rate=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=0.00001)
+    train(train_loader, model, criterion, epochs=10, learning_rate=0.00001)
