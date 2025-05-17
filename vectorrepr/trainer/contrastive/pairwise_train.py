@@ -33,8 +33,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
 
     # 训练循环
     with tqdm(train_loader, desc="Training", unit="batch") as progress:
+        # start = time.time()
         for anchor, candidate, score in progress:
-            # start = time.time()
             # 数据改成torch.float32
             anchor, candidate, score = (
                 anchor.to(device, dtype=torch.float32),
@@ -69,6 +69,7 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
             running_loss += loss.item()
             progress.set_postfix(loss=loss.item())
             # print(loss.item())
+            # start = time.time()
 
     return running_loss / len(train_loader)
 
