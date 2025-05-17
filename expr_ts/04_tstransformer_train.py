@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from vectorrepr.datasets.timeseries import TimeSeriesDataset
 from vectorrepr.sampler import ConfigurableSampler
-from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder
+from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder, TimeSeriesCNN
 from vectorrepr.trainer.contrastive.pairwise_train import train
 
 dataset = TimeSeriesDataset(
@@ -33,7 +33,8 @@ sampler = ConfigurableSampler(dataset, anchors[:10000], candidates[:10000], scor
 loader = DataLoader(sampler, batch_size=512, shuffle=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = LSTMEncoder(6, 512).to(device, dtype=torch.float32)
+
+model = TimeSeriesCNN(6, 30, 256).to(device, dtype=torch.float32)
 criterion = nn.MSELoss(reduction="none")
 optimizer = optim.Adam(model.parameters(), lr=0.00001)
 train(loader, model, criterion, epochs=10, learning_rate=0.00001)

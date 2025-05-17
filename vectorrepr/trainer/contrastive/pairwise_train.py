@@ -6,7 +6,7 @@ import numpy as np
 from loguru import logger
 from tqdm import tqdm
 from pathlib import Path
-from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder
+from vectorrepr.models import TimeSeriesTransformerEmbedding, LSTMEncoder, TimeSeriesCNN
 import time
 
 
